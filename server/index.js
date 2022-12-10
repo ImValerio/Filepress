@@ -1,6 +1,19 @@
 const express = require('express');
 const morgan = require('morgan')
 const cors = require('cors');
+
+const multer = require('multer');
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, __dirname+'/raw_files')
+    },
+    filename: function (req, file, cb) {
+        cb(null, file.originalname)
+    }
+})
+
+const upload = multer({ storage:storage })
+
 const app = express();
 
 const { compressFileGzip, compressFileBrotli } = require('./worker')
@@ -11,11 +24,13 @@ app.use(cors())
 const PORT = process.env.PORT | 5050;
 
 
-app.get('/compress/:fileName/:type', async (req, res) => {
-    const { fileName, type } = req.params;
+app.post('/compress/:type',upload.single('file'), async (req, res) => {
+    const {type} = req.params;
+    const fileName = req.file.originalname
 
-    const stream = type == "brotil" ? compressFileBrotli(fileName) : compressFileGzip(fileName);
+    const stream = type === "brotil" ? compressFileBrotli(fileName) : compressFileGzip(fileName);
     const dateStart = new Date().getTime();
+
     stream.on('finish', () => {
         const computeTimeInMs = new Date().getTime() - dateStart;
         res.status(200).json({
