@@ -3,4 +3,8 @@ server/node_modules
 client/.env
 server/.env
 
-/client/.next/*
+client/.next
+server/raw_files/*
+client/.next/*
+
+server/results/*

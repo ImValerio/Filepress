@@ -2,7 +2,9 @@ import {useState} from 'react'
 
 const index = () => {
   const [algorithm, setAlgorithm] = useState("gzip")
-  const [file,setFile] = useState(undefined)
+    const [mode, setMode] = useState("compress")
+
+    const [file,setFile] = useState(undefined)
 
     const handleSubmit = async()=>{
         if(file == undefined) return;
@@ -10,7 +12,7 @@ const index = () => {
         const form = new FormData()
         form.append('file', file)
 
-        const res = await fetch("http://localhost:5050/compress/"+algorithm, {
+        const res = await fetch(`http://localhost:5050/${mode}/${algorithm}`, {
           method: "POST",
           body: form,
         })
@@ -31,6 +33,10 @@ const index = () => {
         <option value="gzip" >Gzip</option>
         <option value="brotli">Brotli</option>
       </select>
+          <select name="mode" value={mode} onChange={(e)=> setMode(e.target.value)}>
+              <option value="compress" >Compress</option>
+              <option value="decompress">Decompress</option>
+          </select>
         <button onClick={handleSubmit}>upload</button>
       </div>
     </div>

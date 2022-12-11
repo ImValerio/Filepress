@@ -16,7 +16,7 @@ const upload = multer({ storage:storage })
 
 const app = express();
 
-const { compressFileGzip, compressFileBrotli } = require('./worker')
+const { compressFileGzip, compressFileBrotli, decompressFileGzip, decompressFileBrotli } = require('./compress')
 
 app.use(morgan('tiny'));
 app.use(cors())
@@ -39,6 +39,24 @@ app.post('/compress/:type',upload.single('file'), async (req, res) => {
         })
 
     })
+})
+
+app.post('/decompress/:type',upload.single('file'), async (req, res) => {
+    const {type} = req.params;
+    const fileName = req.file.originalname
+
+    const stream = type === "brotil" ? decompressFileBrotli(fileName) : decompressFileGzip(fileName);
+    const dateStart = new Date().getTime();
+
+    stream.on('finish', () => {
+        const computeTimeInMs = new Date().getTime() - dateStart;
+        res.status(200).json({
+            msg: "File compressed successfully!",
+            timeToExecute: `${computeTimeInMs / 1000}s, ${computeTimeInMs}ms `
+        })
+
+    })
+
 })
 
 app.listen(PORT, console.log(`===> Listening on port ${PORT}`));
