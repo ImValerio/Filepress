@@ -25,6 +25,8 @@ exports.decompressFileBrotli = (fileName) => {
 }
 
 exports.compressFileGzip = (fileName) => {
+    console.log("Compressing =>", fileName)
+
     const gzip = createGzip();
     const source = createReadStream(`raw_files/${fileName}`);
     const destination = createWriteStream(`results/${fileName}.gz`);
@@ -34,7 +36,8 @@ exports.compressFileGzip = (fileName) => {
 }
 
 exports.decompressFileGzip =  (fileName) => {
-    console.log(fileName)
+    console.log("Decompressing =>", fileName)
+
     const gzip = createGunzip();
     const source = createReadStream(`raw_files/${fileName}`);
     const dotIndex = fileName.lastIndexOf(".");
