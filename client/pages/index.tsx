@@ -3,10 +3,12 @@ import {useState} from 'react'
 const index = () => {
   const [algorithm, setAlgorithm] = useState("gzip")
     const [mode, setMode] = useState("compress")
-
     const [file,setFile] = useState(undefined)
+    const [downloadLink, setDownloadLink] = useState("")
 
+    const serverURL = "http://localhost:5050"
     const handleSubmit = async()=>{
+        setDownloadLink("")
         if(file == undefined) return;
 
         const form = new FormData()
@@ -16,8 +18,9 @@ const index = () => {
           method: "POST",
           body: form,
         })
-        const data = await res.json();
-        console.log(data)
+        const {downloadLink} = await res.json();
+
+        setDownloadLink(downloadLink);
     }
 
   return (
@@ -38,6 +41,7 @@ const index = () => {
               <option value="decompress">Decompress</option>
           </select>
         <button onClick={handleSubmit}>upload</button>
+          {downloadLink && <a href={serverURL+downloadLink}>DOWNLOAD</a>}
       </div>
     </div>
   )

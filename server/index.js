@@ -43,16 +43,18 @@ app.post('/compress/:type',upload.single('file'), async (req, res) => {
         const downloadPath = path.join(tmpFolderPath,compressedFileName)
 
         stream.on('finish', () => {
-                fs.rename(resultPath,downloadPath,(err)=>{
+            fs.rename(resultPath,downloadPath,(err)=>{
                     if (err) throw err
                     fs.unlinkSync(path.join(__dirname,"raw_files", fileName))
 
-                })
+            })
 
             const computeTimeInMs = new Date().getTime() - dateStart;
+            const downloadLink = downloadPath.substring(downloadPath.indexOf("download")-1,downloadPath.length);
+
             res.status(200).json({
                 msg: "File compressed successfully!",
-                downloadLink: tmpFolderPath,
+                downloadLink,
                 timeToExecute: `${computeTimeInMs / 1000}s, ${computeTimeInMs}ms `
             })
 
@@ -98,5 +100,12 @@ app.post('/decompress/:type',upload.single('file'), async (req, res) => {
 
 
 })
+
+app.get('/download/:folder/:fileName', function(req, res){
+    const {folder, fileName} = req.params;
+    const file = `${__dirname}/download/${folder}/${fileName}`;
+    console.log(file)
+    res.download(file); // Set disposition and send it.
+});
 
 app.listen(PORT, console.log(`===> Listening on port ${PORT}`));

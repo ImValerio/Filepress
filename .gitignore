@@ -8,3 +8,4 @@ server/raw_files/*
 client/.next/*
 
 server/results/*
+server/download/*
