@@ -86,6 +86,15 @@ app.post('/decompress/:type',upload.single('file'), async (req, res) => {
                 if (err) throw err
             })
 
+            setTimeout( ()=>{
+                console.log("ciao")
+                fs.rmdir(tmpFolderPath,{ recursive: true }, err => {
+                    if (err) {
+                        throw err
+                    }
+                })
+            },3 * 1000)
+
             res.status(200).json({
                 msg: "File compressed successfully!",
                 downloadLink: tmpFolderPath,
@@ -104,8 +113,8 @@ app.post('/decompress/:type',upload.single('file'), async (req, res) => {
 app.get('/download/:folder/:fileName', function(req, res){
     const {folder, fileName} = req.params;
     const file = `${__dirname}/download/${folder}/${fileName}`;
-    console.log(file)
     res.download(file); // Set disposition and send it.
+
 });
 
 app.listen(PORT, console.log(`===> Listening on port ${PORT}`));
