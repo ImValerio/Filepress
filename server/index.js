@@ -21,7 +21,7 @@ const app = express();
 app.use(express.static(path.join(__dirname,"download")))
 
 const { compressFileGzip, compressFileBrotli, decompressFileGzip, decompressFileBrotli } = require('./compress')
-const {createTmpFolder} = require("./utils");
+const {createTmpFolder, mvProcessedFileToDownload, removeLastExt} = require("./utils");
 
 app.use(morgan('tiny'));
 app.use(cors())
@@ -39,18 +39,10 @@ app.post('/compress/:type',upload.single('file'), async (req, res) => {
         const tmpFolderPath = createTmpFolder(fileName);
         const compressedFileName = fileName+".gz"
 
-        const resultPath = path.join(__dirname,"results",compressedFileName)
-        const downloadPath = path.join(tmpFolderPath,compressedFileName)
-
         stream.on('finish', () => {
-            fs.rename(resultPath,downloadPath,(err)=>{
-                    if (err) throw err
-                    fs.unlinkSync(path.join(__dirname,"raw_files", fileName))
 
-            })
-
+            const downloadLink = mvProcessedFileToDownload(compressedFileName, tmpFolderPath,1)
             const computeTimeInMs = new Date().getTime() - dateStart;
-            const downloadLink = downloadPath.substring(downloadPath.indexOf("download")-1,downloadPath.length);
 
             res.status(200).json({
                 msg: "File compressed successfully!",
@@ -74,30 +66,17 @@ app.post('/decompress/:type',upload.single('file'), async (req, res) => {
     try{
         const stream = type === "brotil" ? decompressFileBrotli(fileName) : decompressFileGzip(fileName);
         const dateStart = new Date().getTime();
+        const tmpFolderPath = createTmpFolder(fileName);
+        const decompressedFileName = removeLastExt(fileName)
 
         stream.on('finish', () => {
-            //Remove old file
-            fs.unlinkSync(path.join(__dirname,"raw_files", fileName))
-
             const computeTimeInMs = new Date().getTime() - dateStart;
-            const tmpFolderPath = createTmpFolder(fileName);
 
-            fs.rename(path.join(__dirname,"results",fileName),tmpFolderPath,(err)=>{
-                if (err) throw err
-            })
-
-            setTimeout( ()=>{
-                console.log("ciao")
-                fs.rmdir(tmpFolderPath,{ recursive: true }, err => {
-                    if (err) {
-                        throw err
-                    }
-                })
-            },3 * 1000)
+            const downloadLink = mvProcessedFileToDownload(decompressedFileName,tmpFolderPath, 0)
 
             res.status(200).json({
                 msg: "File compressed successfully!",
-                downloadLink: tmpFolderPath,
+                downloadLink,
                 timeToExecute: `${computeTimeInMs / 1000}s, ${computeTimeInMs}ms `
             })
 

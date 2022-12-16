@@ -9,3 +9,24 @@ exports.createTmpFolder = (fileName) => {
 
     return folderPath;
 }
+
+exports.mvProcessedFileToDownload = (fileName, tmpFolderPath, mode)=>{
+
+    const resultPath = path.join(__dirname,"results",fileName)
+    const downloadPath = path.join(tmpFolderPath,fileName)
+
+    fs.rename(resultPath,downloadPath,(err)=>{
+        if (err) throw err
+
+        const rmFileName = mode === 1 ? exports.removeLastExt(fileName) : fileName+".gz";
+
+        fs.unlinkSync(path.join(__dirname,"raw_files", rmFileName))
+
+    })
+    return downloadPath.substring(downloadPath.indexOf("download") - 1, downloadPath.length)
+}
+
+exports.removeLastExt = (fileName)=>{
+    const dot = fileName.lastIndexOf(".");
+    return fileName.substring(0,dot)
+}

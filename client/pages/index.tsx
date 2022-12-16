@@ -1,4 +1,5 @@
 import {useState} from 'react'
+import 'animate.css';
 
 const index = () => {
     const [algorithm, setAlgorithm] = useState("gzip")
@@ -34,7 +35,7 @@ const index = () => {
       <div id="dropContainer" className={'flex justify-center items-center font-bold text-2xl uppercase w-full'} >
         Drop Here
       </div>
-      <div className={'my-2 flex'}>
+      <div className={'my-2 flex items-center'}>
           <input type="file" id="fileInput"  onChange={(e)=> setFile(e.target.files[0])}/>
           <select className={'border-b-4 border-indigo-600'} name="algorithms" id="algorithms" value={algorithm} onChange={(e)=> setAlgorithm(e.target.value)}>
               <option value="gzip" >Gzip</option>
@@ -44,11 +45,11 @@ const index = () => {
               <option value="compress" >Compress</option>
               <option value="decompress">Decompress</option>
           </select>
-          <button className={'text-white bg-indigo-600 py-1 px-3'} onClick={handleSubmit}>UPLOAD</button>
+          <button className={'text-white bg-indigo-600 px-4 py-1 rounded-sm '} onClick={handleSubmit}>UPLOAD</button>
       </div>
           {
               downloadLink && (
-                  <div className="bg-gray-50 w-full">
+                  <div className="bg-gray-50 w-full animate__animated animate__fadeInUp">
                       <div
                           className="mx-auto max-w-7xl py-12 px-4 sm:px-6 lg:flex lg:items-center lg:justify-between lg:py-16 lg:px-8">
                           <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
