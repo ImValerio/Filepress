@@ -21,7 +21,7 @@ const app = express();
 app.use(express.static(path.join(__dirname,"download")))
 
 const { compressFileGzip, compressFileBrotli, decompressFileGzip, decompressFileBrotli } = require('./compress')
-const {createTmpFolder, mvProcessedFileToDownload, removeLastExt} = require("./utils");
+const {createTmpFolder, mvProcessedFileToDownload, removeLastExt, rmDownloadAfter5min} = require("./utils");
 
 app.use(morgan('tiny'));
 app.use(cors())
@@ -34,15 +34,16 @@ app.post('/compress/:type',upload.single('file'), async (req, res) => {
     const fileName = req.file.originalname
 
     try{
-        const stream = type === "brotil" ? compressFileBrotli(fileName) : compressFileGzip(fileName);
+        const stream = type === "brotli" ? compressFileBrotli(fileName) : compressFileGzip(fileName);
         const dateStart = new Date().getTime();
         const tmpFolderPath = createTmpFolder(fileName);
-        const compressedFileName = fileName+".gz"
+        const compressedFileName = type === "brotli" ? fileName+".br" : fileName+".gz"
 
         stream.on('finish', () => {
 
             const downloadLink = mvProcessedFileToDownload(compressedFileName, tmpFolderPath,1)
             const computeTimeInMs = new Date().getTime() - dateStart;
+            rmDownloadAfter5min(tmpFolderPath);
 
             res.status(200).json({
                 msg: "File compressed successfully!",
@@ -85,15 +86,12 @@ app.post('/decompress/:type',upload.single('file'), async (req, res) => {
         res.status(500).json({error: 'Internal server error'})
         console.log(err)
     }
-
-
 })
 
 app.get('/download/:folder/:fileName', function(req, res){
     const {folder, fileName} = req.params;
     const file = `${__dirname}/download/${folder}/${fileName}`;
     res.download(file); // Set disposition and send it.
-
 });
 
 app.listen(PORT, console.log(`===> Listening on port ${PORT}`));

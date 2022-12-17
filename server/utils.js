@@ -9,12 +9,12 @@ exports.createTmpFolder = (fileName) => {
 
     return folderPath;
 }
-
+//mode: 1 => compress   0 => decompress
 exports.mvProcessedFileToDownload = (fileName, tmpFolderPath, mode)=>{
 
     const resultPath = path.join(__dirname,"results",fileName)
     const downloadPath = path.join(tmpFolderPath,fileName)
-
+    // Remove old raw file
     fs.rename(resultPath,downloadPath,(err)=>{
         if (err) throw err
 
@@ -29,4 +29,14 @@ exports.mvProcessedFileToDownload = (fileName, tmpFolderPath, mode)=>{
 exports.removeLastExt = (fileName)=>{
     const dot = fileName.lastIndexOf(".");
     return fileName.substring(0,dot)
+}
+
+exports.rmDownloadAfter5min = (tmpFolderPath)=>{
+    setTimeout( ()=>{
+        fs.rmdir(tmpFolderPath,{ recursive: true }, err => {
+            if (err) {
+                throw err
+            }
+        })
+    },3* 1000)
 }
