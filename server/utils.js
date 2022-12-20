@@ -2,7 +2,7 @@ const {v4: uuidv4} = require("uuid");
 const path = require("path");
 const fs = require("fs");
 
-exports.createTmpFolder = (fileName) => {
+exports.createTmpFolder = () => {
     const tmpFolderName = uuidv4();
     const folderPath = path.join(__dirname,"download",tmpFolderName)
     fs.mkdirSync(folderPath)
@@ -18,7 +18,7 @@ exports.mvProcessedFileToDownload = (fileName, tmpFolderPath, mode)=>{
     fs.rename(resultPath,downloadPath,(err)=>{
         if (err) throw err
 
-        const rmFileName = mode === 1 ? exports.removeLastExt(fileName) : fileName+".gz";
+        const rmFileName = mode === 1 ? exports.removeLastExt(fileName) : fileName;
 
         fs.unlinkSync(path.join(__dirname,"raw_files", rmFileName))
 
@@ -39,4 +39,11 @@ exports.rmDownloadAfter5min = (tmpFolderPath)=>{
             }
         })
     },5 * 60 * 1000)
+}
+
+exports.FileInfo = class FileInfo {
+    constructor(fileNameOrig,fileNameProcessed) {
+       this.fileNameOrig = fileNameOrig;
+       this.fileNameProcessed = fileNameProcessed;
+    }
 }

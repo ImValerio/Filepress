@@ -5,32 +5,56 @@ const {
     createWriteStream,
 } = require('node:fs');
 const fs = require("fs");
+const path = require("path");
+const {createTmpFolder, removeLastExt} = require("./utils");
 
-exports.compressFileBrotli = (fileName) => {
+exports.compressFileBrotli = (file) => {
     const brotli = createBrotliCompress();
-    const source = createReadStream(`raw_files/${fileName}`);
-    const destination = createWriteStream(`results/${fileName}.br`);
+    const pathSource = path.join("raw_files",file.fileNameOrig)
+    const pathDestination = path.join("results",file.fileNameProcessed)
+
+    const source = createReadStream(pathSource);
+    const destination = createWriteStream(pathDestination);
 
     // Pipe the read and write operations with brotli compression
     return source.pipe(brotli).pipe(destination);
 }
 
 exports.decompressFileBrotli = (fileName) => {
-    //TODO: fix decompress passing right param type in brotliDecompress function
-    const source = createReadStream(`results/${fileName}`);
+    const inputFile = path.join("raw_files",fileName)
+    const outputFile = path.join("results",removeLastExt(fileName))
 
-    const brotli = brotliDecompress();
-    const destination = createWriteStream(`raw_files/${fileName}`);
+    console.log(inputFile,outputFile)
 
-    // Pipe the read and write operations with brotli compression
-    return source.pipe(brotli).pipe(destination);
+    fs.readFileSync(inputFile, (error, data) => {
+        if (error) {
+            console.error(error);
+        } else {
+            brotliDecompress(data, (error, result) => {
+                if (error) {
+                    console.error(error);
+                } else {
+                    fs.writeFile(outputFile, result, (error) => {
+                        if (error) {
+                            console.error(error);
+                        } else {
+                            console.log(`Decompressed file successfully written to ${outputFile}`);
+                        }
+                    });
+                }
+            });
+        }
+    })
 }
 
-exports.compressFileGzip = (fileName) => {
+exports.compressFileGzip = (file) => {
     const gzip = createGzip();
-    const source = createReadStream(`raw_files/${fileName}`);
-    const destination = createWriteStream(`results/${fileName}.gz`);
 
+    const pathSource = path.join("raw_files",file.fileNameOrig)
+    const pathDestination = path.join("results",file.fileNameProcessed)
+
+    const source = createReadStream(pathSource);
+    const destination = createWriteStream(pathDestination);
     // Pipe the read and write operations with brotli compression
     return source.pipe(gzip).pipe(destination);
 }

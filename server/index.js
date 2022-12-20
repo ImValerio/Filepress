@@ -21,7 +21,7 @@ const app = express();
 app.use(express.static(path.join(__dirname,"download")))
 
 const { compressFileGzip, compressFileBrotli, decompressFileGzip, decompressFileBrotli } = require('./compress')
-const {createTmpFolder, mvProcessedFileToDownload, removeLastExt, rmDownloadAfter5min} = require("./utils");
+const {createTmpFolder, mvProcessedFileToDownload, removeLastExt, rmDownloadAfter5min, FileInfo} = require("./utils");
 
 app.use(morgan('tiny'));
 app.use(cors())
@@ -31,13 +31,16 @@ const PORT = process.env.PORT | 5050;
 
 app.post('/compress/:type',upload.single('file'), async (req, res) => {
     const {type} = req.params;
+
     const fileName = req.file.originalname
+    const compressedFileName = type === "brotli" ? fileName+".br" : fileName+".gz"
+
+    const file = new FileInfo(fileName,compressedFileName)
 
     try{
-        const stream = type === "brotli" ? compressFileBrotli(fileName) : compressFileGzip(fileName);
+        const stream = type === "brotli" ? compressFileBrotli(file) : compressFileGzip(file);
         const dateStart = new Date().getTime();
-        const tmpFolderPath = createTmpFolder(fileName);
-        const compressedFileName = type === "brotli" ? fileName+".br" : fileName+".gz"
+        const tmpFolderPath = createTmpFolder();
 
         stream.on('finish', () => {
 
@@ -66,24 +69,31 @@ app.post('/decompress/:type',upload.single('file'), async (req, res) => {
     const fileName = req.file.originalname
 
     try{
-        const stream = type === "brotil" ? decompressFileBrotli(fileName) : decompressFileGzip(fileName);
+        let computeTimeInMs,downloadLink;
         const dateStart = new Date().getTime();
-        const tmpFolderPath = createTmpFolder(fileName);
+        const tmpFolderPath = createTmpFolder();
         const decompressedFileName = removeLastExt(fileName)
 
-        stream.on('finish', () => {
+        if(type === "brotli"){
+            await decompressFileBrotli(fileName)
+            computeTimeInMs = new Date().getTime() - dateStart;
+            downloadLink = mvProcessedFileToDownload(decompressedFileName,tmpFolderPath, 0)
 
-            const downloadLink = mvProcessedFileToDownload(decompressedFileName,tmpFolderPath, 0)
-            const computeTimeInMs = new Date().getTime() - dateStart;
+        }else{
+            const stream = decompressFileGzip(fileName);
 
-            rmDownloadAfter5min(tmpFolderPath);
+            stream.on('finish', () => {
 
-            res.status(200).json({
-                msg: "File compressed successfully!",
-                downloadLink,
-                timeToExecute: `${computeTimeInMs / 1000}s, ${computeTimeInMs}ms `
+                downloadLink = mvProcessedFileToDownload(decompressedFileName,tmpFolderPath, 0)
+                computeTimeInMs = new Date().getTime() - dateStart;
+
+                rmDownloadAfter5min(tmpFolderPath);
             })
-
+        }
+        res.status(200).json({
+            msg: "File compressed successfully!",
+            downloadLink,
+            timeToExecute: `${computeTimeInMs / 1000}s, ${computeTimeInMs}ms `
         })
     } catch (err){
         console.log(err)
@@ -95,7 +105,7 @@ app.get('/download/:folder/:fileName', function(req, res){
     const {folder, fileName} = req.params;
     const file = `${__dirname}/download/${folder}/${fileName}`;
 
-    res.download(file); // Set disposition and send it
+    res.download(file);
 });
 
 app.listen(PORT, console.log(`===> Listening on port ${PORT}`));
