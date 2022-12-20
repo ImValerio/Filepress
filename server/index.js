@@ -43,6 +43,7 @@ app.post('/compress/:type',upload.single('file'), async (req, res) => {
 
             const downloadLink = mvProcessedFileToDownload(compressedFileName, tmpFolderPath,1)
             const computeTimeInMs = new Date().getTime() - dateStart;
+
             rmDownloadAfter5min(tmpFolderPath);
 
             res.status(200).json({
@@ -71,9 +72,11 @@ app.post('/decompress/:type',upload.single('file'), async (req, res) => {
         const decompressedFileName = removeLastExt(fileName)
 
         stream.on('finish', () => {
-            const computeTimeInMs = new Date().getTime() - dateStart;
 
             const downloadLink = mvProcessedFileToDownload(decompressedFileName,tmpFolderPath, 0)
+            const computeTimeInMs = new Date().getTime() - dateStart;
+
+            rmDownloadAfter5min(tmpFolderPath);
 
             res.status(200).json({
                 msg: "File compressed successfully!",
@@ -82,16 +85,17 @@ app.post('/decompress/:type',upload.single('file'), async (req, res) => {
             })
 
         })
-    }catch (err){
-        res.status(500).json({error: 'Internal server error'})
+    } catch (err){
         console.log(err)
+        res.status(500).json({error: 'Internal server error'})
     }
 })
 
 app.get('/download/:folder/:fileName', function(req, res){
     const {folder, fileName} = req.params;
     const file = `${__dirname}/download/${folder}/${fileName}`;
-    res.download(file); // Set disposition and send it.
+
+    res.download(file); // Set disposition and send it
 });
 
 app.listen(PORT, console.log(`===> Listening on port ${PORT}`));

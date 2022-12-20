@@ -38,5 +38,5 @@ exports.rmDownloadAfter5min = (tmpFolderPath)=>{
                 throw err
             }
         })
-    },3* 1000)
+    },5 * 60 * 1000)
 }
