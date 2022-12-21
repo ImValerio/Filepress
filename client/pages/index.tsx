@@ -1,5 +1,6 @@
 import {useState} from 'react'
 import 'animate.css';
+import {getFileExt} from "../lib/utils";
 
 const index = () => {
     const [algorithm, setAlgorithm] = useState("gzip")
@@ -17,7 +18,7 @@ const index = () => {
         const form = new FormData()
         form.append('file', file)
 
-        const res = await fetch(`http://localhost:5050/${mode}/${algorithm}`, {
+        const res = await fetch(`${serverURL}/${mode}/${algorithm}`, {
           method: "POST",
           body: form,
         })
@@ -25,6 +26,23 @@ const index = () => {
 
         setDownloadLink(downloadLink);
         setTimeToExecute(timeToExecute);
+    }
+
+    const handleChangeFile = (file:File)=>{
+        setFile(file);
+
+        const fileExt = getFileExt(file.name);
+
+        if(fileExt === ".br"){
+            setMode("decompress");
+            setAlgorithm("brotli")
+        }
+
+        if(fileExt === ".gz"){
+            setMode("decompress");
+            setAlgorithm("gzip")
+        }
+
     }
 
   return (
@@ -36,7 +54,7 @@ const index = () => {
         Drop Here
       </div>
       <div className={'my-2 flex items-center'}>
-          <input type="file" id="fileInput"  onChange={(e)=> setFile(e.target.files[0])}/>
+          <input type="file" id="fileInput"  onChange={(e)=> handleChangeFile(e.target.files[0])}/>
           <select className={'border-b-4 border-indigo-600'} name="algorithms" id="algorithms" value={algorithm} onChange={(e)=> setAlgorithm(e.target.value)}>
               <option value="gzip" >Gzip</option>
               <option value="brotli">Brotli</option>
