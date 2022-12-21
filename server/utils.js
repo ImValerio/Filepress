@@ -9,18 +9,15 @@ exports.createTmpFolder = () => {
 
     return folderPath;
 }
-//mode: 1 => compress   0 => decompress
-exports.mvProcessedFileToDownload = (fileName, tmpFolderPath, mode)=>{
+exports.mvProcessedFileToDownload = (file, tmpFolderPath)=>{
 
-    const resultPath = path.join(__dirname,"results",fileName)
-    const downloadPath = path.join(tmpFolderPath,fileName)
+    const resultPath = path.join(__dirname,"results",file.fileNameProcessed)
+    const downloadPath = path.join(tmpFolderPath,file.fileNameProcessed)
     // Remove old raw file
     fs.rename(resultPath,downloadPath,(err)=>{
         if (err) throw err
 
-        const rmFileName = mode === 1 ? exports.removeLastExt(fileName) : fileName;
-
-        fs.unlinkSync(path.join(__dirname,"raw_files", rmFileName))
+        fs.unlinkSync(path.join(__dirname,"raw_files", file.fileNameOrig))
 
     })
     return downloadPath.substring(downloadPath.indexOf("download") - 1, downloadPath.length)
