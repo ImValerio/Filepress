@@ -36,13 +36,16 @@ const index = () => {
         if(fileExt === ".br"){
             setMode("decompress");
             setAlgorithm("brotli")
+            return;
         }
 
         if(fileExt === ".gz"){
             setMode("decompress");
             setAlgorithm("gzip")
+            return;
         }
 
+        setMode("compress")
     }
 
   return (
