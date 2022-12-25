@@ -66,8 +66,7 @@ const index = () => {
     }
 
     const getShortFileName = (fileName: string):string => {
-        if(fileName.length < 16)
-            return fileName;
+        if(fileName.length < 16) return fileName;
         const firstPart = fileName.substring(0,10);
         const lastCharAndExtension = fileName.substring(fileName.lastIndexOf(".") -2, fileName.length);
 
