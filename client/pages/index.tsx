@@ -1,13 +1,14 @@
-import {useState} from 'react'
+import {useRef, useState} from 'react'
 import 'animate.css';
 import {getFileExt} from "../lib/utils";
 
 const index = () => {
     const [algorithm, setAlgorithm] = useState("gzip")
     const [mode, setMode] = useState("compress")
-    const [file,setFile] = useState(undefined)
+    const [file,setFile] = useState("")
     const [downloadLink, setDownloadLink] = useState("")
     const [timeToExecute, setTimeToExecute] = useState("")
+    const refFile = useRef(null);
 
 
     const serverURL = "http://localhost:5050"
@@ -50,13 +51,40 @@ const index = () => {
         if(fileExt === ".br"){
             setMode("decompress");
             setAlgorithm("brotli")
+            return;
         }
 
         if(fileExt === ".gz"){
             setMode("decompress");
             setAlgorithm("gzip")
+            return;
         }
 
+        setMode("compress")
+    }
+
+    const handleDragOver = (e)=>{
+        e.stopPropagation();
+        e.preventDefault();
+
+    }
+
+    const handleDrop = (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+
+        const {files} = e.dataTransfer;
+        if(files){
+           handleChangeFile(files[0])
+        }
+    }
+
+    const getShortFileName = (fileName: string):string => {
+        if(fileName.length < 16) return fileName;
+        const firstPart = fileName.substring(0,10);
+        const lastCharAndExtension = fileName.substring(fileName.lastIndexOf(".") -2, fileName.length);
+
+       return firstPart+".."+lastCharAndExtension;
     }
 
   return (
@@ -64,11 +92,14 @@ const index = () => {
 
       <div className={'flex justify-center items-center flex-col'}>
 
-      <div id="dropContainer" className={'flex justify-center items-center font-bold text-2xl uppercase w-full'} >
+      <div id="dropContainer" onDragOver={e=> handleDragOver(e)} onDrop={(e)=> handleDrop(e)} className={'flex justify-center items-center font-bold text-2xl uppercase w-full'} >
         Drop Here
       </div>
       <div className={'my-2 flex items-center'}>
-          <input type="file" id="fileInput"  onChange={(e)=> handleChangeFile(e.target.files[0])}/>
+          <input type="file" id="fileInput"  className="hidden" ref={refFile}  onChange={(e)=> handleChangeFile(e.target.files[0])}/>
+
+          <button className={'text-indigo-600 border border-indigo-600 hover:bg-indigo-600 hover:text-white px-4 py-1 rounded-sm '} onClick={()=> refFile.current.click()}>Select a file</button>
+          <p className='mx-2'>{file.name ? getShortFileName(file.name) : "You haven't selected file yet."}</p>
           <select className={'border-b-4 border-indigo-600'} name="algorithms" id="algorithms" value={algorithm} onChange={(e)=> setAlgorithm(e.target.value)}>
               <option value="gzip" >Gzip</option>
               <option value="brotli">Brotli</option>

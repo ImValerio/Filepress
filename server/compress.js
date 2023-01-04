@@ -7,6 +7,7 @@ const {
 const fs = require("fs");
 const path = require("path");
 const {createTmpFolder, removeLastExt} = require("./utils");
+const {promisify} = require('util');
 
 exports.compressFileBrotli = (file) => {
     const brotli = createBrotliCompress();
@@ -20,31 +21,13 @@ exports.compressFileBrotli = (file) => {
     return source.pipe(brotli).pipe(destination);
 }
 
-exports.decompressFileBrotli = (fileName) => {
-    const inputFile = path.join("raw_files",fileName)
-    const outputFile = path.join("results",removeLastExt(fileName))
+exports.decompressFileBrotli = async (file) => {
+    const inputFile = path.join("raw_files",file.fileNameOrig)
+    const outputFile = path.join("results",file.fileNameProcessed)
 
-    console.log(inputFile,outputFile)
-
-    fs.readFileSync(inputFile, (error, data) => {
-        if (error) {
-            console.error(error);
-        } else {
-            brotliDecompress(data, (error, result) => {
-                if (error) {
-                    console.error(error);
-                } else {
-                    fs.writeFile(outputFile, result, (error) => {
-                        if (error) {
-                            console.error(error);
-                        } else {
-                            console.log(`Decompressed file successfully written to ${outputFile}`);
-                        }
-                    });
-                }
-            });
-        }
-    })
+    const data = await promisify(fs.readFile)(inputFile)
+    const result = await promisify(brotliDecompress)(data)
+    return promisify(fs.writeFile)(outputFile, result)
 }
 
 exports.compressFileGzip = (file) => {
@@ -59,12 +42,14 @@ exports.compressFileGzip = (file) => {
     return source.pipe(gzip).pipe(destination);
 }
 
-exports.decompressFileGzip =  (fileName) => {
+exports.decompressFileGzip =  (file) => {
     const gzip = createGunzip();
-    const source = createReadStream(`raw_files/${fileName}`);
-    const dotIndex = fileName.lastIndexOf(".");
-    const newFileName = fileName.substring(0, dotIndex)
-    const destination = createWriteStream(`results/${newFileName}`);
+
+    const pathSource = path.join("raw_files",file.fileNameOrig)
+    const pathDestination = path.join("results",file.fileNameProcessed)
+    console.log(pathSource,pathDestination)
+    const source = createReadStream(pathSource);
+    const destination = createWriteStream(pathDestination);
 
     // Pipe the read and write operations with brotli compression
     return source.pipe(gzip).pipe(destination);

@@ -44,7 +44,7 @@ app.post('/compress/:type',upload.single('file'), async (req, res) => {
 
         stream.on('finish', () => {
 
-            const downloadLink = mvProcessedFileToDownload(compressedFileName, tmpFolderPath,1)
+            const downloadLink = mvProcessedFileToDownload(file, tmpFolderPath)
             const computeTimeInMs = new Date().getTime() - dateStart;
 
             rmDownloadAfter5min(tmpFolderPath);
@@ -66,35 +66,46 @@ app.post('/compress/:type',upload.single('file'), async (req, res) => {
 
 app.post('/decompress/:type',upload.single('file'), async (req, res) => {
     const {type} = req.params;
+
     const fileName = req.file.originalname
+    const decompressedFileName = removeLastExt(fileName)
+
+
+    const file = new FileInfo(fileName,decompressedFileName)
 
     try{
         let computeTimeInMs,downloadLink;
         const dateStart = new Date().getTime();
         const tmpFolderPath = createTmpFolder();
-        const decompressedFileName = removeLastExt(fileName)
 
         if(type === "brotli"){
-            await decompressFileBrotli(fileName)
+             await decompressFileBrotli(file)
             computeTimeInMs = new Date().getTime() - dateStart;
-            downloadLink = mvProcessedFileToDownload(decompressedFileName,tmpFolderPath, 0)
+            downloadLink = mvProcessedFileToDownload(file,tmpFolderPath)
+
+            res.status(200).json({
+                msg: "File compressed successfully!",
+                downloadLink,
+                timeToExecute: `${computeTimeInMs / 1000}s, ${computeTimeInMs}ms `
+            })
 
         }else{
-            const stream = decompressFileGzip(fileName);
+            const stream = decompressFileGzip(file);
 
             stream.on('finish', () => {
 
-                downloadLink = mvProcessedFileToDownload(decompressedFileName,tmpFolderPath, 0)
+                downloadLink = mvProcessedFileToDownload(file,tmpFolderPath)
                 computeTimeInMs = new Date().getTime() - dateStart;
 
                 rmDownloadAfter5min(tmpFolderPath);
+                res.status(200).json({
+                    msg: "File compressed successfully!",
+                    downloadLink,
+                    timeToExecute: `${computeTimeInMs / 1000}s, ${computeTimeInMs}ms `
+                })
             })
         }
-        res.status(200).json({
-            msg: "File compressed successfully!",
-            downloadLink,
-            timeToExecute: `${computeTimeInMs / 1000}s, ${computeTimeInMs}ms `
-        })
+
     } catch (err){
         console.log(err)
         res.status(500).json({error: 'Internal server error'})
