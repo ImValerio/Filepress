@@ -17,15 +17,29 @@ const index = () => {
 
         const form = new FormData()
         form.append('file', file)
+        const xhr = new XMLHttpRequest();
 
-        const res = await fetch(`${serverURL}/${mode}/${algorithm}`, {
-          method: "POST",
-          body: form,
-        })
-        const {downloadLink, timeToExecute} = await res.json();
+        xhr.open('POST', `${serverURL}/${mode}/${algorithm}`, true);
 
-        setDownloadLink(downloadLink);
-        setTimeToExecute(timeToExecute);
+        xhr.upload.onprogress = function(event) {
+            if (event.lengthComputable) {
+                const percentComplete = (event.loaded / event.total) * 100;
+                console.log(`${percentComplete}% uploaded`);
+            }
+        };
+
+        xhr.onload = async function () {
+            if (xhr.status === 200) {
+                const {downloadLink, timeToExecute} =  JSON.parse(xhr.response);
+
+                setDownloadLink(downloadLink);
+                setTimeToExecute(timeToExecute);
+            }
+
+
+        };
+
+        xhr.send(form);
     }
 
     const handleChangeFile = (file:File)=>{
