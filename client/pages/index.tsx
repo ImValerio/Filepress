@@ -8,6 +8,7 @@ const index = () => {
     const [file,setFile] = useState("")
     const [downloadLink, setDownloadLink] = useState("")
     const [timeToExecute, setTimeToExecute] = useState("")
+    const [uploadPercentage, setUploadPercentage] = useState(0)
     const refFile = useRef(null);
 
 
@@ -24,8 +25,8 @@ const index = () => {
 
         xhr.upload.onprogress = function(event) {
             if (event.lengthComputable) {
-                const percentComplete = (event.loaded / event.total) * 100;
-                console.log(`${percentComplete}% uploaded`);
+                setUploadPercentage((event.loaded / event.total) * 100);
+
             }
         };
 
@@ -111,7 +112,7 @@ const index = () => {
           <button className={'text-white bg-indigo-600 px-4 py-1 rounded-sm '} onClick={handleSubmit}>UPLOAD</button>
       </div>
           {
-              downloadLink && (
+              downloadLink ? (
                   <div className="bg-gray-50 w-full animate__animated animate__fadeInUp">
                       <div
                           className="mx-auto max-w-7xl py-12 px-4 sm:px-6 lg:flex lg:items-center lg:justify-between lg:py-16 lg:px-8">
@@ -129,6 +130,11 @@ const index = () => {
                           </div>
                       </div>
                   </div>
+              ) : (uploadPercentage > 0 &&(
+                  <div className={'w-full'}>
+                      <h3 className={'absolute text-white'}>{uploadPercentage.toFixed(1)}%</h3>
+                      <progress className={'w-full h-full'} value={uploadPercentage} max={100}></progress>
+                  </div>)
               )
           }
 
