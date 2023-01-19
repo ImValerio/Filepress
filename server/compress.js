@@ -31,7 +31,9 @@ exports.decompressFileBrotli = async (file) => {
 }
 
 exports.compressFileGzip = (file) => {
-    const gzip = createGzip();
+    const gzip = createGzip({
+        level: 8
+    });
 
     const pathSource = path.join("raw_files",file.fileNameOrig)
     const pathDestination = path.join("results",file.fileNameProcessed)
